@@ -6,20 +6,33 @@ puts "LOAD PATH >#{$LOAD_PATH}<"
 
 require "potrubi/version"
 
+selectMatches = [
+                    Regexp.new('\.rb\Z'),
+                ]
+
+rejectMatches = [
+                 Regexp.new('HOLD'),
+                 ]
+
 Gem::Specification.new do |s|
   s.name        = "potrubi"
   s.version     = Potrubi::VERSION
   s.authors     = ["Ian Rumford"]
   s.email       = ["ian@rumford.name"]
-  s.homepage    = ""
+  s.homepage    = "https://github.com/ianrumford/potrubi"
   s.summary     = %q{Potrubi: plumbing for Ruby}
-  s.description = %q{Potrubi: A collection of mixins for Common Ruby needs}
+  s.description = %q{Potrubi: A collection of Ruby mixins for common needs}
 
   s.rubyforge_project = "potrubi"
 
   #s.files         = `git ls-files`.split("\n")
-  s.files         = `git ls-files`.split("\n").select {|f| f.match(/\.rb\Z/) }
-#  s.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")
+
+  s.files         = `git ls-files`.split("\n").select {|f| selectMatches.all? {|r| r.match(f)}   }
+  #s.files         = `git ls-files`.split("\n").select {|f| selectMatches.all? {|r| r.match(f)} && (! rejectMatches.any? {|r| r.match(f) })  }
+  #s.files         = `git ls-files`.split("\n").select {|f| f.match(/\.rb\Z/) }
+
+
+  #  s.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")
 #  s.executables   = `git ls-files -- bin/*`.split("\n").map{ |f|
   #  File.basename(f) }
   
