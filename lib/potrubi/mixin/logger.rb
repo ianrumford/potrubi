@@ -17,7 +17,7 @@ module Potrubi
         @logger ||= new_logger(logrArgs)
       end
       
-      def self.logger(logrArgs=nil)
+      def self.new_logger(logrArgs=nil)
         
         logrArgs && (logrArgs.is_a?(Hash) || raise(ArgumentError,"logrArgs >#{logrArgs}< not hash",caller))
         ###log = Log4r.new(STDOUT)

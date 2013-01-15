@@ -7,8 +7,8 @@
 
 require_relative '../bootstrap'
 
-requireList = %w(dynamic)
-requireList.each {|r| require_relative "#{r}"}
+#requireList = %w(dynamic)
+#requireList.each {|r| require_relative "#{r}"}
 
 mixinContent = Module.new do
   

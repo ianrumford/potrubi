@@ -284,6 +284,24 @@ moduleContent = Module.new do
   alias_method :normalise_module_contents_or_croak, :normalise_mixin_contents_or_croak
   #=end
 
+
+  
+end
+
+#  Make the methods both instance and class
+
+module Potrubi
+  module Mixin
+    module Konstant
+    end
+  end
+end
+
+###Potrubi::Mixin::Konstant.extend(moduleContent)
+Potrubi::Mixin::Konstant.__send__(:include, moduleContent)  # Instance Methods
+
+__END__
+
   #=begin
   def resolve_module_constants_or_croak(*resolvMaps)
     eye = :rsv_mod_cons
@@ -303,7 +321,7 @@ moduleContent = Module.new do
             requireNames = [*resolvMap[:requires]].flatten.compact
             requirePath = resolvMap[:path]
             requirePath && potrubi_bootstrap_mustbe_directory_or_croak(requirePath)
-            requirePaths = requirePath ?  requireNames.each_with_object({}) {|n,h| h[n] = File.join(requirePath, n) } : requireNames.each_with_object({}) {|n,h| h[n] = n}
+            requirePaths = requirePath ?  requireNames.each_with_object({}) {|n,h| h[n] = File.join(requirePath, n) } : requireNames.each_with_object({}) {|n,h1| h1[n] = n}
 
             $DEBUG_POTRUBI_BOOTSTRAP && potrubi_bootstrap_logger_ms(eye, 'REQUIRES', potrubi_bootstrap_logger_fmt_who(:paths => requirePaths, :names => requireNames, :path => requirePath))
             $DEBUG_POTRUBI_BOOTSTRAP && potrubi_bootstrap_logger_ms(eye, 'LOADED FEATURES', potrubi_bootstrap_logger_fmt_who(:loaded => $LOADED_FEATURES))
@@ -348,21 +366,3 @@ moduleContent = Module.new do
     moduleConstants 
   end
   #=end
-  
-end
-
-#  Make the methods both instance and class
-
-module Potrubi
-  module Mixin
-    module Konstant
-    end
-  end
-end
-
-###Potrubi::Mixin::Konstant.extend(moduleContent)
-Potrubi::Mixin::Konstant.__send__(:include, moduleContent)  # Instance Methods
-
-__END__
-
-

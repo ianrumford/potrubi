@@ -12,7 +12,7 @@ metaclassMethods = Module.new do
   #=begin
   def dynamic_apply_edits(editSpecInput, *textValues, &block)
     eye = :dyn_apy_edts
-    eyeTale = '"TEXT EDITS'
+    #eyeTale = '"TEXT EDITS'
     
     #editSpec.is_a?(Hash) || editSpec.is_a?(Enumerator) || (raise ArgumentError,"editSpec >#{editSpec.class}< >#{editSpec}< not hash")
     editSpec = case editSpecInput

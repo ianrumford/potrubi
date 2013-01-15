@@ -48,6 +48,6 @@ mixinContent = Module.new do
   #=end
 end
 
-Potrubi::Core.assign_module_constant_or_croak(mixinContent, __FILE__)
+Potrubi::Core.assign_module_constant_or_croak(mixinContent, :Potrubi, :Mixin, :Util)
 
 __END__

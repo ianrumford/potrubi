@@ -190,7 +190,8 @@ klassContent = Class.new do
 
 end
 
-Potrubi::Core.assign_class_constant_or_croak(klassContent, __FILE__)
+#Potrubi::Core.assign_class_constant_or_croak(klassContent, __FILE__)
+Potrubi::Core.assign_class_constant_or_croak(klassContent, :Potrubi, :Klass, :Syntax, :Braket)
 
 __END__
 

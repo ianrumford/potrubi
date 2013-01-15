@@ -139,8 +139,8 @@
 
         mustbeMethodCompareText = <<-'ENDOFMETHOD'
           def mustbe_MUSTBE_NAME_or_croak(arg1, arg2, *args)
-            eye = :MUSTBE_NAME
-            arg1.is_a?(arg2.class) || contract_exception(arg1, "DIFFERNT CLASSES arg1 >#{arg1.class}< >#{arg1}< arg2 >#{arg2.class}< >#{arg2}< opr >MUSTBE_SPEC<", *args)
+            #eye = :MUSTBE_NAME
+            arg1.is_a?(arg2.class) || contract_exception(arg1, :MUSTBE_NAME, "DIFFERNT CLASSES arg1 >#{arg1.class}< >#{arg1}< arg2 >#{arg2.class}< >#{arg2}< opr >MUSTBE_SPEC<", *args)
             argC = (arg1 MUSTBE_SPEC arg2)
             # puts "<=> #{eye} argC >#{argC.class}< >#{argC}< arg1 >#{arg1.class}< >#{arg1}< arg2 >#{arg2.class}< >#{arg2}< opr >MUSTBE_SPEC<"
             argC ? arg1 : contract_exception(argC, "argC >#{argC.class}< >#{argC}< arg1 >#{arg1.class}< >#{arg1}< arg2 >#{arg2.class}< >#{arg2}< opr >MUSTBE_SPEC<", *args)

@@ -34,6 +34,7 @@ module Potrubi
             $DEBUG_POTRUBI_BOOTSTRAP && #{loggerMethod}(*a, &b)
           end;
           ENDOFHERE
+          text
       end.compact.flatten.join("\n")
 
       ###puts("bootstrapLoggerText >\n#{bootstrapLoggerText}")
