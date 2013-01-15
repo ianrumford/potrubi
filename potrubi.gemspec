@@ -2,16 +2,21 @@
 
 $LOAD_PATH.push File.expand_path("../lib", __FILE__)
 
-puts "LOAD PATH >#{$LOAD_PATH}<"
+###puts "LOAD PATH >#{$LOAD_PATH}<"
 
 require "potrubi/version"
 
 selectMatches = [
-                    Regexp.new('\.rb\Z'),
+                 Regexp.new('\.rb\Z'),
+                 Regexp.new('README'),
+                 Regexp.new('Rakefile'),
+                 Regexp.new('Gemfile'),
+                 Regexp.new('.gemspec\Z'),
                 ]
 
 rejectMatches = [
                  Regexp.new('HOLD'),
+                 Regexp.new('lsfiles.rb')
                  ]
 
 Gem::Specification.new do |s|
@@ -27,20 +32,17 @@ Gem::Specification.new do |s|
 
   #s.files         = `git ls-files`.split("\n")
 
-  s.files         = `git ls-files`.split("\n").select {|f| selectMatches.all? {|r| r.match(f)}   }
-  #s.files         = `git ls-files`.split("\n").select {|f| selectMatches.all? {|r| r.match(f)} && (! rejectMatches.any? {|r| r.match(f) })  }
-  #s.files         = `git ls-files`.split("\n").select {|f| f.match(/\.rb\Z/) }
-
+  s.files         = `git ls-files`.split("\n").select {|f| selectMatches.any? {|r| r.match(f)} && (! rejectMatches.any? {|r| r.match(f) })  }
 
   #  s.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")
-#  s.executables   = `git ls-files -- bin/*`.split("\n").map{ |f|
+  #  s.executables   = `git ls-files -- bin/*`.split("\n").map{ |f|
   #  File.basename(f) }
   
   s.require_paths = ["lib"]
 
   # specify any dependencies here; for example:
   
-  #s.add_development_dependency "yaml"
+  # s.add_development_dependency "yaml"
   # s.add_development_dependency "rspec"
   # s.add_runtime_dependency "rest-client"
 end
