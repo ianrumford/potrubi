@@ -1,3 +1,4 @@
+
 # -*- encoding: utf-8 -*-
 
 $LOAD_PATH.push File.expand_path("../lib", __FILE__)
@@ -9,17 +10,19 @@ require "potrubi/version"
 selectMatches = [
                  Regexp.new('\.rb\Z'),
                  Regexp.new('README'),
-                 Regexp.new('Rakefile'),
-                 Regexp.new('Gemfile'),
-                 Regexp.new('.gemspec\Z'),
+                 Regexp.new('LICENCE'),
                 ]
 
 rejectMatches = [
                  Regexp.new('HOLD'),
-                 Regexp.new('lsfiles.rb')
+                 Regexp.new('lsfiles.rb'),
+                 Regexp.new('Rakefile'),
+                 Regexp.new('Gemfile'),
+                 Regexp.new('.gemspec\Z'),
                  ]
 
 Gem::Specification.new do |s|
+  
   s.name        = "potrubi"
   s.version     = Potrubi::VERSION
   s.authors     = ["Ian Rumford"]
@@ -34,15 +37,10 @@ Gem::Specification.new do |s|
 
   s.files         = `git ls-files`.split("\n").select {|f| selectMatches.any? {|r| r.match(f)} && (! rejectMatches.any? {|r| r.match(f) })  }
 
-  #  s.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")
-  #  s.executables   = `git ls-files -- bin/*`.split("\n").map{ |f|
-  #  File.basename(f) }
+  s.executables = []
   
   s.require_paths = ["lib"]
 
-  # specify any dependencies here; for example:
-  
-  # s.add_development_dependency "yaml"
-  # s.add_development_dependency "rspec"
-  # s.add_runtime_dependency "rest-client"
+  s.required_ruby_version = '>= 1.9.3'
+
 end
