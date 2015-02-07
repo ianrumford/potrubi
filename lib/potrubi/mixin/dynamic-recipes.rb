@@ -11,7 +11,6 @@ metaclassMethods = Module.new do
   include Potrubi::Bootstrap
   include Potrubi::Mixin::Dynamic
   
-  #=begin               
   def recipe_new(tgtMod, newSpecs, &block)
     dynamic_define_methods(tgtMod, newSpecs) do | newName, newKlass |
 
@@ -33,20 +32,15 @@ metaclassMethods = Module.new do
         
       end
     end
-    #=end 
-    #=begin               
+
     def recipe_rescue_croak(tgtMod, croakSpecs, &block)
       dynamic_define_methods(tgtMod, croakSpecs) { | rescueName, rescueValue | "def #{rescueName}(*a, &b); #{rescueName}_or_croak(*a, &b) rescue #{rescueValue || 'nil'}; end\n" }
     end
-    #=end
 
-  #=begin
   def recipe_aliases(tgtMod, aliasSpecs, &block)
     dynamic_define_methods(tgtMod, aliasSpecs) { | aliasName, realName | "alias_method :'#{aliasName}', :'#{realName}';\n" }
   end
-  #=end
 
-  #=begin
   def recipe_croak_rescue(targetModule, croakArgs={}, &croakBlok)
     eye = :rcp_crk_rsc
     
@@ -78,12 +72,8 @@ metaclassMethods = Module.new do
 
     self
   end
-  #=end
-
-
 
 end
-#=end
 
 module Potrubi
   module Mixin

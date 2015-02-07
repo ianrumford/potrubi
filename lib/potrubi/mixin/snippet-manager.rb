@@ -1,18 +1,18 @@
 
 # potrubi text snippets
 
-# looks up sniipets by name in dictionaries
+# looks up snippets by name in dictionaries
 
 # values normally code to be dynamically dused by e.g. Dynamic and COntract
 
 require_relative '../bootstrap'
 
-#requireList = %w(dynamic)
-#requireList.each {|r| require_relative "#{r}"}
-
 mixinContent = Module.new do
   
   include Potrubi::Bootstrap
+
+  # Dictionary Methods
+  # ##################
 
   def dictionary_index
     @dictionary_index ||= {}
@@ -35,7 +35,14 @@ mixinContent = Module.new do
   def is_value_dictionary_name?(dictName)
     dictionary_index[normalise_dictionary_name(dictName)]
   end
-    
+
+  def find_dictionary_home_or_croak
+    eye = :'f_dict_home'
+    dictHome = File.expand_path(__FILE__ + "/../snippet-dictionaries")
+    $DEBUG_POTRUBI_BOOTSTRAP && potrubi_bootstrap_logger_ca(eye, "dictHome >#{dictHome.class}< >#{dictHome}<")
+    dictHome
+  end
+  
   def find_dictionary_or_croak(dictName, &dictBlok)
     eye = :'f_dict'
     eyeTale = 'FIND SNIP DICT'
@@ -62,8 +69,13 @@ mixinContent = Module.new do
     
   end
 
+  def load_home_dictionaries_or_croak(snipDicts)
+    dictHome = find_dictionary_home_or_croak
+    snipDictsHome = potrubi_bootstrap_mustbe_hash_or_croak(snipDicts).each_with_object({}) { | (k,v), h| h[k] = File.join(dictHome, "#{v}.rb") }
+    load_dictionaries_or_croak(snipDictsHome)
+  end
+  
   def load_dictionaries_or_croak(snipDicts)
-    #potrubi_bootstrap_mustbe_hash_or_croak(snipDicts).each {|k,v| puts("LOAD DICT k >#{k}< v >#{v}<"); load_dictionary_or_croak(k, v) }
     potrubi_bootstrap_mustbe_hash_or_croak(snipDicts).each {|k,v| load_dictionary_or_croak(k, v) }
   end
   
@@ -75,8 +87,17 @@ mixinContent = Module.new do
 
     ### let require work it ok potrubi_bootstrap_mustbe_file_or_croak(dictPath, eye, "dictPath not a file")
 
-    dictHash = potrubi_bootstrap_mustbe_hash_or_croak(instance_eval(File.open(dictPath).readlines.join("\n")))
+    dictResult = instance_eval(File.read(dictPath))
 
+    dictHash = case dictResult
+               when Hash then dictResult
+               when Proc then dictResult.call
+               else
+                 potrubi_bootstrap_surprise_exception(dictResult, eye, "dictResult is what?")
+               end
+
+    potrubi_bootstrap_mustbe_hash_or_croak(dictHash, eye)
+    
     dictNameNrm = normalise_dictionary_name(dictName)
     
     add_dictionaries_to_index(dictNameNrm => dictHash)
@@ -87,6 +108,9 @@ mixinContent = Module.new do
     
   end
 
+  # Snippet Methods
+  # ###############
+  
   def map_snippets_or_croak(dictName, *snippetList, &snipBlok)
     eye = :'map_snippets'
     eyeTale = 'MAP SNIPPETS'
@@ -97,7 +121,7 @@ mixinContent = Module.new do
 
     snippetMaps = snippetList.flatten(1).map { | snippetName | snippetHash.has_key?(snippetName) ? snippetHash[snippetName] : snippetName }
     
-    $DEBUG_POTRUBI_BOOTSTRAP && potrubi_bootstrap_logger_mx(eye, eyeTale, "dictName >#{dictName}< snippetMaps >#{snippetMaps}<")
+    $DEBUG_POTRUBI_BOOTSTRAP && potrubi_bootstrap_logger_mx(eye, eyeTale, "dictName >#{dictName}<", potrubi_bootstrap_logger_fmt_kls_size(snippetMaps: snippetMaps))
     
     potrubi_bootstrap_mustbe_array_or_croak(snippetMaps, eye)
     
@@ -111,7 +135,7 @@ mixinContent = Module.new do
   # if snippetName not present, calls block if given, else exception
   
   def find_snippets_or_croak(dictName, *snippetList, &snipBlok)
-    eye = :'f_snippets'
+    eye = :f_snips
     eyeTale = 'FIND SNIPPETS'
 
     $DEBUG_POTRUBI_BOOTSTRAP && potrubi_bootstrap_logger_me(eye, eyeTale, "dictName >#{dictName}< snippetList >#{snippetList}<  snipBlok >#{snipBlok}<")
@@ -122,7 +146,15 @@ mixinContent = Module.new do
       case snippetName
       when Symbol then
         case
-        when dictHash.has_key?(snippetName) then h[snippetName] = dictHash[snippetName]
+        when dictHash.has_key?(snippetName) then
+          snippetValueNom = dictHash[snippetName]
+          snippetValueNrm = case snippetValueNom
+                            when Proc then
+                              dictHash[snippetName] = snippetValueNom.call # update dict
+                            else
+                              snippetValueNom
+                            end
+          h[snippetName] = snippetValueNrm
         else
           h[snippetName] = Kernel.block_given? ? snipBlok.call(dictHash, snippetName) : potrubi_bootstrap_mustbe_not_nil_or_croak(dictHash[snippetName], eye, "snippetName >#{snippetName}< not found")
         end
@@ -131,52 +163,32 @@ mixinContent = Module.new do
       end
     end
     
-    $DEBUG_POTRUBI_BOOTSTRAP && potrubi_bootstrap_logger_mx(eye, eyeTale, "dictName >#{dictName}< snippetMaps >#{snippetMaps}<")
+    $DEBUG_POTRUBI_BOOTSTRAP && potrubi_bootstrap_logger_mx(eye, eyeTale, "dictName >#{dictName}< snippetMaps >#{snippetMaps.size}<")
     
     potrubi_bootstrap_mustbe_hash_or_croak(snippetMaps, eye)
     
   end
+
+  
 end
+
 module Potrubi
   module Mixin
-    module TextSnippets
+    module SnippetManager
     end
   end
 end
 
-##Potrubi::Mixin::TextSnippets.__send__(:include, mixinContent)  # Instance Methods
-Potrubi::Mixin::TextSnippets.extend(mixinContent)  # Module  Methods
+##Potrubi::Mixin::SnippetManager.__send__(:include, mixinContent)  # Instance Methods
+Potrubi::Mixin::SnippetManager.extend(mixinContent)  # Module  Methods
 
 # load some dictionaries
 
 #$DEBUG = true
 #$DEBUG_POTRUBI_BOOTSTRAP = true
 
-snipDicts = {dynamic_methods: File.expand_path(__FILE__ + "/../text-snippets/methods-text-snippets.rb")}
-Potrubi::Mixin::TextSnippets.load_dictionaries_or_croak(snipDicts)
 
-#STOPHERELOADSNIPDICTS
-
-__END__
-
-# quick test
-
-
-$DEBUG = true
-$DEBUG_POTRUBI_BOOTSTRAP = true
-
-Potrubi::Mixin::TextSnippets.find_dictionary_or_croak(:dynamic_methods)
-
-#Potrubi::Mixin::TextSnippets.load_dictionary_or_croak('.x/y') # fail
-
-snipLook = Potrubi::Mixin::TextSnippets.find_snippets_or_croak(:dynamic_methods, :package_mustbe)
-
-puts("snipLook >#{snipLook.class}< >#{snipLook}<")
-
-snipLook = Potrubi::Mixin::TextSnippets.find_snippets_or_croak(:dynamic_methods, :package_mustbe) { |d,s| s } # will work
-
-snipLook = Potrubi::Mixin::TextSnippets.find_snippets_or_croak(:dynamic_methods, :xxxxxxpackage_mustbe) # will fail
-
+snipDicts = {dynamic_methods: :'methods-text-snippets'}
+Potrubi::Mixin::SnippetManager.load_home_dictionaries_or_croak(snipDicts)
 
 __END__
-

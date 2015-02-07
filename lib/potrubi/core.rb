@@ -1,14 +1,14 @@
 
-# Core Mixin
+# Potrubi Core Mixin
 
 require_relative 'bootstrap'
 
-requireList = %w(dynamic text-snippets exception contract konstant pathandnames)
+requireList = %w(dynamic snippet-manager exception contract konstant pathandnames)
 requireList.each {|r| require_relative "mixin/#{r}"}
 
 mixinContent = Module.new do
 
-  # Include the mixins becuase of class method usage
+  # Include the mixins because of class method usage
   
   includeList = [Potrubi::Bootstrap,
                  Potrubi::Mixin::Dynamic,

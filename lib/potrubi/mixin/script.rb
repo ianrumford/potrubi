@@ -3,9 +3,6 @@
 
 require_relative '../core'
 
-#requireList = %w(bootstrap)
-#requireList.each {|r| require_relative "#{r}"}
-
 mixinContent = Module.new do
 
   include Potrubi::Bootstrap
@@ -13,7 +10,6 @@ mixinContent = Module.new do
    # Script Methods
    # ##############
    
-   #=begin
    def find_script_name_or_croak(scriptPath=$0)
      File.basename(scriptPath, ".*")
    end
@@ -46,7 +42,6 @@ mixinContent = Module.new do
    def find_script_config_directory_or_croak(dirName='config', scriptPath=$0)
      find_script_peer_directory_or_croak(dirName, scriptPath)
    end
-   #=end
    
  end
 

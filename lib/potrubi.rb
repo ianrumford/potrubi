@@ -1,5 +1,5 @@
 
-# Potrubi
+# Potrubi gem
 
 gemName = 'potrubi'
 

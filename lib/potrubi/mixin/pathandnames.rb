@@ -3,15 +3,11 @@
 
 require_relative '../bootstrap'
 
-#requireList = %w(bootstrap)
-#requireList.each {|r| require_relative "#{r}"}
-
 mixinContent = Module.new do
 
   # Fundamental Methods
   # ###################
   
-  #=begin
   def transform_pathandname_or_croak(transformSpec, *transformData)
     eye = :tfm_pan
 
@@ -21,15 +17,12 @@ mixinContent = Module.new do
 
     transformDefs = case transformSpec
                     when Proc, Symbol, Array then [*transformSpec].compact
-                      #when Array then transformSpec
-                      ###mustbe_hashs_or_croak(transformSpec)
                     else
                       potrubi_bootstrap_surprise_exception(transformSpec, eye, "transformSpec is what?")
                     end
 
 
     transformResult = transformDefs.inject(transformData) do |s, transformCode|
-      ###transformCode = transformDef[:transform]
       $DEBUG_POTRUBI_BOOTSTRAP && potrubi_bootstrap_logger_ms(eye,"INJ BEG", potrubi_bootstrap_logger_fmt_who(:transformCode => transformCode, :s => s))
       case transformCode
       when Proc then transformCode.call(s)
@@ -53,13 +46,10 @@ mixinContent = Module.new do
     transformResult
     
   end
-  #=end
-
 
   # Core Methods
   # ############
 
-  #=begin
   def normalise_pathandname_names_syntax_or_croak(*names, &block)
     eye = :nrm_pan_ns_syn
     
@@ -70,20 +60,16 @@ mixinContent = Module.new do
     nameNorm
     
   end
-  #=end
   
-  #=begin
   def normalise_pathandname_hier_drop_while(*names, &block)
     r = names.flatten.compact.drop_while(&block)
     potrubi_bootstrap_logger_ca(:nrm_pan_drop_while, potrubi_bootstrap_logger_fmt_who(:r => r, :names => names))
     r
   end
-  #=end
   
-  #=begin
   def normalise_pathandname_hier_split_at(*names, &splitBlok)
     a = names.flatten
-    i = a.find_index(&splitBlok)
+    i = splitBlok.call(a)
 
     r = case i
         when NilClass then [a] # not found: all are "before"
@@ -93,40 +79,33 @@ mixinContent = Module.new do
           potrubi_bootstrap_surprise_exception(i, eye, "a >#{a}< i is what?")
         end
     
-    potrubi_bootstrap_logger_ca(:nrm_pan_h_split_at, potrubi_bootstrap_logger_fmt_who(:r => r, :names => names))
+    potrubi_bootstrap_logger_ca(:nrm_pan_h_split_at, potrubi_bootstrap_logger_fmt_who(:r => r, :a => a))
     
     r
   end
-  #=end
 
-  #=begin
   def normalise_pathandname_hier_from_lib(*names) # from as in after
-    r =  normalise_pathandname_hier_split_at(*names) {|v| v.downcase == 'lib' }
+    r =  normalise_pathandname_hier_split_at(*names) {|a| a.rindex {|v| v.downcase == 'lib' }}
     q = case
         when r.size == 1 then r.first # no match; use all
         else
           r[1] # the after
         end
-    potrubi_bootstrap_logger_ca(:nrm_pan_h_from_lib, potrubi_bootstrap_logger_fmt_who(:q => q, :r => r, :names => names))
+    potrubi_bootstrap_logger_ca(:nrm_pan_h_from_lib, potrubi_bootstrap_logger_fmt_who(:q => q, :r => r, :a => names))
     q
   end
-  #=end
   
-  #=begin
   def normalise_pathandname_names_elements(*names)
     versionSuffixRegexp = Regexp.new('(.+)_v\d+.*\Z')
     r = names.flatten.compact.map {|n| m = n.to_s; (mD = m.to_s.match(versionSuffixRegexp)) ? mD[1] : m}.map {|n| p = n.split('_'); p.map {|q| q[0] = q.chr.upcase; q}.join }
     potrubi_bootstrap_logger_ca(:nrm_pan_ns_eles, potrubi_bootstrap_logger_fmt_who(:r => r, :names => names))
     r
   end
-  #=end
 
-  #=begin
   def normalise_pathandname_paths_or_croak(*paths, &block)
     eye = :nrm_pan_ps
     pathNorm = begin
                  pathNomn = paths.flatten.compact.join('/').gsub('\\', '/').gsub('::', '/').gsub('//', '/')
-                 #pathFull = (pathNomn =~ /\A\./) ? ::File.expand_path(pathNomn) : pathNomn
                  File.expand_path(pathNomn)
                end
     
@@ -134,9 +113,7 @@ mixinContent = Module.new do
     pathNorm
   end
   alias_method :normalise_pathandname_path_or_croak, :normalise_pathandname_paths_or_croak
-  #=end
   
-  #=begin
   def normalise_pathandname_names_to_hier_or_croak(*names, &block)
     eye = :nrm_pan_ns_2_h
     
@@ -155,9 +132,7 @@ mixinContent = Module.new do
     
   end
   alias_method :normalise_pathandname_name_to_hier_or_croak, :normalise_pathandname_names_to_hier_or_croak
-  #=end
 
-  #=begin
   def normalise_pathandname_paths_to_hier_or_croak(*paths, &block)
     eye = :nrm_pan_ps_2_h
     
@@ -174,12 +149,10 @@ mixinContent = Module.new do
     
   end
   alias_method :normalise_pathandname_path_to_hier_or_croak, :normalise_pathandname_paths_to_hier_or_croak
-  #=end
 
   # Derivative Methods
   # ##################
   
-  #=begin
   def normalise_pathandname_names_or_croak(*names, &block)
     eye = :nrm_pan_ns
     nameNorm = normalise_pathandname_names_to_hier_or_croak(*names, &block).join('::')
@@ -187,9 +160,7 @@ mixinContent = Module.new do
     nameNorm
   end
   alias_method :normalise_pathandname_name_or_croak, :normalise_pathandname_names_or_croak
-  #=end
   
-  #=begin
   def find_pathandname_names_hier_from_lib_or_croak(*names, &block)
     eye = :f_pan_ns_hier_fr_lib
     
@@ -208,7 +179,6 @@ mixinContent = Module.new do
     potrubi_bootstrap_mustbe_array_or_croak(libHier)
 
   end
-  #=end
   
 end
 

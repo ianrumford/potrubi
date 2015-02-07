@@ -6,6 +6,7 @@
 
 defined?($DEBUG_POTRUBI_BOOTSTRAP) || ($DEBUG_POTRUBI_BOOTSTRAP = nil)
 
+#$DEBUG_POTRUBI_BOOTSTRAP = true
 #$DEBUG = true # TESTING
 
 require_relative('logger')
@@ -14,33 +15,32 @@ module Potrubi
   module Mixin
     module BootstrapCommon
 
-#=begin
       bootstrapLoggerMethods = {
         logger: :logger_message,
+        logger_instance_telltale: :logger_instance_telltale,
         logger_me: :logger_me,
         logger_mx: :logger_mx,
         logger_ms: :logger_ms,
         logger_ca: :logger_ca,
-        logger_fmt_class: :logger_fmt0,
+        logger_beg: :logger_beg,
+        logger_fin: :logger_fin,
+        logger_fmt: :logger_fmt,
+        logger_fmt_kls: :logger_fmt00,
+        logger_fmt_kls_size: :logger_fmt0000,
         logger_fmt_who: :logger_fmt0,
-        logger_fmt_who_only: :logger_fmt00,
+        logger_fmt_who_only: :logger_fmt000,
       }
 
       bootstrapLoggerText = bootstrapLoggerMethods.map do | bootMethod, loggerMethod |
-         text = <<-"ENDOFHERE"
+        text = <<-"ENDOFHERE"
           def potrubi_bootstrap_#{bootMethod}(*a, &b)
-            #puts("BOOTLOGR POTRUBI DEBUG >#{$DEBUG_POTRUBI_BOOTSTRAP.class}< >#{$DEBUG_POTRUBI_BOOTSTRAP}<")
-            #puts("BOOTLOGR DEBUG >#{$DEBUG.class}< >#{$DEBUG}<")
             $DEBUG_POTRUBI_BOOTSTRAP && #{loggerMethod}(*a, &b)
           end;
           ENDOFHERE
           text
       end.compact.flatten.join("\n")
 
-      ###puts("bootstrapLoggerText >\n#{bootstrapLoggerText}")
-        
       self.module_eval(bootstrapLoggerText)
-#=end
       
       def potrubi_bootstrap_raise_exception(exception, value, *tellTales)
         #tellTale = potrubi_bootstrap_logger_format_telltales(*tellTales)
@@ -49,7 +49,7 @@ module Potrubi
       end
 
       def potrubi_bootstrap_surprise_exception(value, *tellTales)
-        potrubi_bootstrap_raise_exception(ArgumentError, value, "value was a surpise", *tellTales)
+        potrubi_bootstrap_raise_exception(ArgumentError, value, "value was a surprise", *tellTales)
       end
       
       def potrubi_bootstrap_unsupported_exception(value, *tellTales)
@@ -58,6 +58,10 @@ module Potrubi
 
       def potrubi_bootstrap_missing_exception(value, *tellTales)
         potrubi_bootstrap_raise_exception(ArgumentError, value, "value missing", *tellTales)
+      end
+
+      def potrubi_bootstrap_duplicate_exception(value, *tellTales)
+        potrubi_bootstrap_raise_exception(ArgumentError, value, "duplicate value", *tellTales)
       end
       
       def potrubi_bootstrap_mustbe_hash_or_croak(testValue, *tellTales)
@@ -84,12 +88,24 @@ module Potrubi
         testValue.is_a?(String) ? testValue : potrubi_bootstrap_raise_exception(ArgumentError, testValue, "value not string", tellTales)
       end
 
+      def potrubi_bootstrap_mustbe_symbol_or_croak(testValue, *tellTales)
+        testValue.is_a?(Symbol) ? testValue : potrubi_bootstrap_raise_exception(ArgumentError, testValue, "value not symbol", tellTales)
+      end
+      
+      def potrubi_bootstrap_mustbe_fixnum_or_croak(testValue, *tellTales)
+        testValue.is_a?(Fixnum) ? testValue : potrubi_bootstrap_raise_exception(ArgumentError, testValue, "value not fixnum", tellTales)
+      end
+      
+      def potrubi_bootstrap_mustbe_float_or_croak(testValue, *tellTales)
+        testValue.is_a?(Float) ? testValue : potrubi_bootstrap_raise_exception(ArgumentError, testValue, "value not float", tellTales)
+      end
+      
       def potrubi_bootstrap_mustbe_file_or_croak(testValue, *tellTales)
-        File.file?(testValue) ? testValue : potrubi_bootstrap_raise_exception(ArgumentError, testValue, "value not file", tellTales)
+        File.file?(testValue.to_s) ? testValue : potrubi_bootstrap_raise_exception(ArgumentError, testValue, "value not file", tellTales)
       end
       
       def potrubi_bootstrap_mustbe_directory_or_croak(testValue, *tellTales)
-        File.directory?(testValue) ? testValue : potrubi_bootstrap_raise_exception(ArgumentError, testValue, "value not directory", tellTales)
+        File.directory?(testValue.to_s) ? testValue : potrubi_bootstrap_raise_exception(ArgumentError, testValue, "value not directory", tellTales)
       end
       
       def potrubi_bootstrap_mustbe_key_or_croak(testValue, keyName, *tellTales)
@@ -102,6 +118,10 @@ module Potrubi
 
       def potrubi_bootstrap_mustbe_not_empty_or_croak(testValue, *tellTales)
         (testValue.respond_to?(:empty?) && (! testValue.empty?)) ? testValue : potrubi_bootstrap_raise_exception(ArgumentError, testValue, "testValue >#{testValue}< failed not empty", tellTales)
+      end
+
+      def potrubi_bootstrap_mustbe_empty_or_croak(testValue, *tellTales)
+        (testValue.respond_to?(:empty?) && testValue.empty?) ? testValue : potrubi_bootstrap_raise_exception(ArgumentError, testValue, "testValue >#{testValue}< failed empty", tellTales)
       end
       
       def bootstrap_find_module_constant(*a)
@@ -124,3 +144,9 @@ module Potrubi
     end
   end
 end
+
+__END__
+
+Potrubi::Mixin::BootstrapCommon.instance_methods.each {|m| puts("Potrubi::Mixin::BootstrapCommon Inst Mth >#{m}<")}
+
+__END__

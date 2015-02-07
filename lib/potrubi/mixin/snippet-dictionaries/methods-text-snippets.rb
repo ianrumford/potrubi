@@ -1,9 +1,71 @@
 
-# potrubi text snippets
+# potrubi method text snippets
 
-# methods dictionary
+# dynamic methods dictionary
+
+# Procs
+
+Proc.new do
+  
+  isvaluecontractcollectionwithnilvaluesProc = ->(spec) {
+    eye = :'is_val_con_col'
+    
+    require 'potrubi/klass/syntax/braket'
+    
+    targetModule = potrubi_bootstrap_mustbe_module_or_croak(spec[:target], eye)
+    
+    specEdit = potrubi_bootstrap_mustbe_hash_or_croak(spec[:edit], eye)
+
+    mustbeContracts = potrubi_bootstrap_mustbe_hash_or_croak(specEdit[:VALUE_CONTRACTS], eye, 'CONTRACT_RECIPES not hash')
+
+    braketKls = Potrubi::Klass::Syntax::Braket
+
+    braketMethod = braketKls.new_method
+
+    braketDefBeg = braketKls.new_statement.push('def is_value_MUSTBE_NAME?(testValue)')
+
+    braketCollection = braketKls.new_statement.push('testValue.is_a?(Hash) &&')
+
+    braketItems = mustbeContracts.map do | key, contract |
+
+      #  if value is nil don't test
+      
+      braketKls.new_statement.push(
+                                   '((r = testValue[:',
+                                   key,
+                                   ']) ? ',
+                                   'is_value_',
+                                   key,
+                                   '?(r) : true)',
+                                   ' && '
+                                   )
+
+    end
+
+    braketResult = braketKls.new_statement.push('testValue')
+
+    braketDefEnd = braketKls.new_statement.push('end')
+    
+    braketMethod.push(braketDefBeg,
+                      braketCollection,
+                      braketItems,
+                      braketResult,
+                      braketDefEnd,
+                      )
+    
+    specText = braketMethod.to_s
+
+    # Generate the contracts for the allowed values
+    Potrubi::Mixin::ContractRecipes.recipe_mustbes(targetModule, mustbeContracts)
+
+    {edit: specEdit, spec: specText}
+    
+  }
 
 
+
+
+# Texts
 
         mustbeMethodOneArgText = <<-'ENDOFMUSTBESCALARMETHOD'
         def mustbe_MUSTBE_NAME_or_croak(testValue, *tellTales)
@@ -17,7 +79,6 @@
           Kernel.block_given? ? r.map {|v| procBlok.call(v) } : r
         end;
         def mustbe_MUSTBE_NAME_key_or_nil_with_proc_or_croak(testValue, keyName, *tellTales, &procBlok)
-          #(r = is_value_key?(testValue, keyName)) ? mustbe_MUSTBE_NAME_with_proc_or_croak(r, *tellTales, &procBlok) : nil
           (r = is_value_key?(testValue, keyName)) && mustbe_MUSTBE_NAME_with_proc_or_croak(r, *tellTales, &procBlok)
         end;
         ENDOFMUSTBEARRAYMETHOD
@@ -28,8 +89,7 @@
           Kernel.block_given? ? r.each_with_object({}) {|(k,v), h| h[k] = procBlok.call(v) } : r
         end;
         def mustbe_MUSTBE_NAME_key_or_nil_with_proc_or_croak(testValue, keyName, *tellTales, &procBlok)
-          #(r = is_value_key?(testValue, keyName)) ? mustbe_MUSTBE_NAME_with_proc_or_croak(r, *tellTales, &procBlok) : nil
-          (r = is_value_key?(testValue, keyName)) && mustbe_MUSTBE_NAME_with_proc_or_croak(r, *tellTales, &procBlok)
+           (r = is_value_key?(testValue, keyName)) && mustbe_MUSTBE_NAME_with_proc_or_croak(r, *tellTales, &procBlok)
         end;
         ENDOFMUSTBEHASHMETHOD
         
@@ -40,9 +100,9 @@
         ENDOFMUSTBERESULTMETHOD
         
         mustbeMethodCollectionsText = <<-'ENDOFHERE'
-        def mustbe_MUSTBE_NAMEs_or_croak(*testValues, &procBlock)  # collections
+        def mustbe_MUSTBE_NAME_list_or_croak(testValues, &procBlock)  # collections
           haveBlock = Kernel.block_given? && procBlock
-          testValues.map {|v| r = mustbe_MUSTBE_NAME_or_croak(v, 'mustbe_MUSTBE_NAME_or_croak failed'); haveBlock ? haveBlock.call(r) : r}
+           testValues.map {|v| mustbe_MUSTBE_NAME_or_croak((haveBlock ? haveBlock.call(v) : v), 'mustbe_MUSTBE_NAME') }
         end;                                    
         ENDOFHERE
 
@@ -68,38 +128,31 @@
         
         isvalueMethodText = <<-'ENDOFISVALUEMETHOD'
         def is_value_MUSTBE_NAME?(testValue)
-          IS_VALUE_TEST ? testValue : nil
-        end;
+          r = IS_VALUE_TEST ? testValue : nil
+         end;
         ENDOFISVALUEMETHOD
 
         isvaluecollectionwithkeysMethodText = <<-'ENDOFHERE'
         def is_value_MUSTBE_NAME?(testValue)
-          #puts("\nCOLLECTION WITH KEYS MUSTBE_NAME KEY_NAMES >#{KEY_NAMES}< testValue >#{testValue}< >#{testValue}<")
-          #(testValue.is_a?(Hash) && is_value_subset?(testValue.keys, KEY_NAMES)) ? testValue : nil
-          testValue.is_a?(Hash) && is_value_subset?(testValue.keys, KEY_NAMES) && testValue
+           testValue.is_a?(Hash) && is_value_subset?(testValue.keys, KEY_NAMES) && testValue
         end;
         ENDOFHERE
 
         isvaluetypedarrayMethodText = <<-'ENDOFHERE'
         def is_value_MUSTBE_NAME?(testValue)
-          #puts("\nTYPED ARRAY MUSTBE_NAME VALUE_TYPE testValue >#{testValue}< >#{testValue}<")
-          #(testValue.is_a?(Array) && (testValue.all? {|v| v ? is_value_VALUE_TYPE?(v) : VALUE_IS_NIL_RESULT })) ? testValue : nil
-          testValue.is_a?(Array) && (testValue.all? {|v| v ? is_value_VALUE_TYPE?(v) : VALUE_IS_NIL_RESULT }) && testValue
+           testValue.is_a?(Array) && (testValue.all? {|v| v ? is_value_VALUE_TYPE?(v) : VALUE_IS_NIL_RESULT }) && testValue
         end;
         ENDOFHERE
         
-        isvaluetypedcollectionMethodText = <<-'ENDOFHERE'
+         isvaluetypedcollectionMethodText = <<-'ENDOFHERE'
         def is_value_MUSTBE_NAME?(testValue)
-          #puts("TYPED COLLECTION MUSTBE_NAME KEY_TYPE VALUE_TYPE testValue >#{testValue}< >#{testValue}<")
-          #(testValue.is_a?(Hash) && (testValue.all? {|k,v| is_value_KEY_TYPE?(k) && (v ? is_value_VALUE_TYPE?(v) : VALUE_IS_NIL_RESULT) })) ? testValue : nil
-          testValue.is_a?(Hash) && (testValue.all? {|k,v| is_value_KEY_TYPE?(k) && (v ? is_value_VALUE_TYPE?(v) : VALUE_IS_NIL_RESULT) }) && testValue
+           testValue.is_a?(Hash) && (testValue.all? {|k,v|  IS_COLLECTION_KEY_TEST && (v ? IS_COLLECTION_VALUE_TEST : VALUE_IS_NIL_RESULT) }) && testValue
         end;
         ENDOFHERE
-
+         
         isvaluetypedcollectionwithkeysMethodText = <<-'ENDOFHERE'
         def is_value_MUSTBE_NAME?(testValue)
-          #puts("\nTYPED COLLECTION WITH KEYS MUSTBE_NAME KEY_TYPE VALUE_TYPE KEY_NAMES >#{KEY_NAMES}< testValue >#{testValue}< >#{testValue}<")
-          (testValue.is_a?(Hash) && is_value_subset?(testValue.keys, KEY_NAMES) && (testValue.all? {|k,v| is_value_KEY_TYPE?(k) && (v ? is_value_VALUE_TYPE?(v) : VALUE_IS_NIL_RESULT) })) ? testValue : nil
+           (testValue.is_a?(Hash) && is_value_subset?(testValue.keys, KEY_NAMES) && (testValue.all? {|k,v| is_value_KEY_TYPE?(k) && (v ? is_value_VALUE_TYPE?(v) : VALUE_IS_NIL_RESULT) })) ? testValue : nil
         end;
         ENDOFHERE
         
@@ -108,7 +161,6 @@
         ENDOFISVALUEALIAS
 
         isvaluevalueisAliasText = '' # TURN OFF ALIAS - TOO DNAGEROUS IF IS_VALUE OVERRIDDEN
-
 
         mustbeMethodKeyText = <<-'ENDOFMUSTBEKEYMETHOD'
         def mustbe_MUSTBE_NAME_key_or_croak(testValue, keyName, *tellTales)
@@ -119,13 +171,39 @@
         end;
         ENDOFMUSTBEKEYMETHOD
 
+        findMethodKeyText = <<-'ENDOFHERE'
+        def find_MUSTBE_NAME_key_or_croak(testValue, *tellTales)
+          mustbe_MUSTBE_NAME_or_croak(mustbe_key_or_croak(testValue, :MUSTBE_KEY_NAME, *tellTales), *tellTales)
+        end;
+        def find_MUSTBE_NAME_key_or_nil_or_croak(testValue, *tellTales)
+          mustbe_MUSTBE_NAME_key_or_nil_or_croak(testValue, :MUSTBE_KEY_NAME, *tellTales)
+        end;
+        ENDOFHERE
+
+        setMethodKeyText = <<-'ENDOFHERE'
+        def set_MUSTBE_NAME_key_or_croak(setHash, setValue, *tellTales)
+          mustbe_hash_or_croak(setHash)[:MUSTBE_KEY_NAME] = mustbe_MUSTBE_NAME_or_croak(setValue, *tellTales)
+          setHash
+        end;
+        ENDOFHERE
+
+        getMethodKeyNameText = <<-'ENDOFHERE'
+        def get_MUSTBE_NAME_key_name
+          :MUSTBE_KEY_NAME
+        end;
+        ENDOFHERE
+        
+        mergeMethodKeyText = <<-'ENDOFHERE'
+        def merge_MUSTBE_NAME_key_or_croak(mergeHash, mergeValue, *tellTales)
+          mustbe_hash_or_croak(mergeHash).merge(:MUSTBE_KEY_NAME => mustbe_MUSTBE_NAME_or_croak(mergeValue, *tellTales))
+        end;
+        ENDOFHERE
+        
         mustbeMethodSubsetText = <<-'ENDOFMUSTBESUBSETMETHOD'
         def mustbe_subset_or_croak(subSet, superSet, *tellTales)
-          ###mustbe_empty_or_croak(mustbe_array_or_croak(subSet, :mustbe_subset1, *tellTales) - mustbe_array_or_croak(superSet, :mustbe_subset2, *tellTales), :mustbe_subset, *tellTales)
           (r = is_value_subset?(subSet, superSet)) ? r : contract_exception(subSet, "value failed is_value_subset? test on superSet >#{superSet}<", *tellTales)
         end;
         def is_value_subset?(subSet, superSet)
-          #(subSet.is_a?(Array) && superSet.is_a?(Array) && (subSet - superSet).empty?) ? subSet : nil
           subSet.is_a?(Array) && superSet.is_a?(Array) && (subSet - superSet).empty? && subSet
         end
         ENDOFMUSTBESUBSETMETHOD
@@ -139,39 +217,39 @@
 
         mustbeMethodCompareText = <<-'ENDOFMETHOD'
           def mustbe_MUSTBE_NAME_or_croak(arg1, arg2, *args)
-            #eye = :MUSTBE_NAME
             arg1.is_a?(arg2.class) || contract_exception(arg1, :MUSTBE_NAME, "DIFFERNT CLASSES arg1 >#{arg1.class}< >#{arg1}< arg2 >#{arg2.class}< >#{arg2}< opr >MUSTBE_SPEC<", *args)
             argC = (arg1 MUSTBE_SPEC arg2)
-            # puts "<=> #{eye} argC >#{argC.class}< >#{argC}< arg1 >#{arg1.class}< >#{arg1}< arg2 >#{arg2.class}< >#{arg2}< opr >MUSTBE_SPEC<"
             argC ? arg1 : contract_exception(argC, "argC >#{argC.class}< >#{argC}< arg1 >#{arg1.class}< >#{arg1}< arg2 >#{arg2.class}< >#{arg2}< opr >MUSTBE_SPEC<", *args)
           end;                            
           ENDOFMETHOD
 
-        
-        snippetAccessor = <<-'ENDOFHERE'
+        # accessors
+
+        snippetBaseAccessor = <<-'ENDOFHERE'
           def ACCESSOR_NAME
-            @ACCESSOR_NAME ||= nil
-          end;
-          def ACCESSOR_NAME=(value)
-            @ACCESSOR_NAME = value
-          end;
-        ENDOFHERE
-          
-        snippetAccessorWithContractText = <<-'ENDOFHERE'
-          def ACCESSOR_NAME
-            @ACCESSOR_NAME ||= nil
+            @ACCESSOR_NAME ||= ACCESSOR_DEFAULT
           end;
           def reset_ACCESSOR_NAME
             @ACCESSOR_NAME = nil
+          end;         
+          alias_method :'get_ACCESSOR_NAME', :'ACCESSOR_NAME'
+        ENDOFHERE
+
+        snippetAccessor = <<-'ENDOFHERE'
+           def ACCESSOR_NAME=(value)
+            @ACCESSOR_NAME = value
           end;
-          def find_ACCESSOR_NAME_or_croak
-            mustbe_ACCESSOR_CONTRACT_or_croak(ACCESSOR_NAME, :f_ACCESSOR_NAME, "value not ACCESSOR_CONTRACT")
-          end;
+          alias_method :'set_ACCESSOR_NAME', :'ACCESSOR_NAME='
+        ENDOFHERE
+          
+        snippetAccessorWithContractText = <<-'ENDOFHERE'
           def ACCESSOR_NAME=(value)
             @ACCESSOR_NAME = mustbe_ACCESSOR_CONTRACT_or_croak(value, :s_ACCESSOR_NAME, "value not ACCESSOR_CONTRACT")
           end;
           alias_method :'set_ACCESSOR_NAME', :'ACCESSOR_NAME='
-          alias_method :'get_ACCESSOR_NAME', :'ACCESSOR_NAME'
+          def find_ACCESSOR_NAME_or_croak
+            mustbe_ACCESSOR_CONTRACT_or_croak(ACCESSOR_NAME, :f_ACCESSOR_NAME, "value not ACCESSOR_CONTRACT")
+          end;
         ENDOFHERE
 
           accessorEdits = {
@@ -182,30 +260,39 @@
 
           valueisnilresultEdits = {VALUE_IS_NIL_RESULT: 'false'}  # default for typed collections is not ok if nil
           
-          packageMustbeText = [mustbeMethodOneArgText, mustbeMethodKeyText, mustbeCommonText, isvalueMethodText, isvaluevalueisAliasText].flatten.join
+          packageMustbeText = [mustbeMethodOneArgText, mustbeMethodKeyText, findMethodKeyText, setMethodKeyText, getMethodKeyNameText, mergeMethodKeyText, mustbeCommonText, isvalueMethodText, isvaluevalueisAliasText].flatten.join
 
-          packageAccessorSpec = [snippetAccessor].flatten
+          packageAccessorSpec = [snippetBaseAccessor, snippetAccessor].flatten
           
           packageAccessorWithContractBaseSpec = [mustbeMethodOneArgText, mustbeMethodKeyText,  mustbeMethodOneArgOrNilText, isvaluevalueisAliasText].flatten
           packageAccessorWithContractSpec = [isvalueMethodText, packageAccessorWithContractBaseSpec].flatten
           packageAccessorWithContractNoIsValueSpec = packageAccessorWithContractBaseSpec
           
           packageAccessorText = Potrubi::Mixin::Dynamic::dynamic_apply_edits(accessorEdits, packageAccessorSpec)
-          packageAccessorWithContractText = Potrubi::Mixin::Dynamic::dynamic_apply_edits(accessorEdits, snippetAccessorWithContractText, packageAccessorWithContractSpec)
-          packageAccessorWithContractNoIsValueText = Potrubi::Mixin::Dynamic::dynamic_apply_edits(accessorEdits, snippetAccessorWithContractText, packageAccessorWithContractNoIsValueSpec) 
+          packageAccessorWithContractText = Potrubi::Mixin::Dynamic::dynamic_apply_edits(accessorEdits, snippetBaseAccessor, snippetAccessorWithContractText, packageAccessorWithContractSpec)
+          packageAccessorWithContractNoIsValueText = Potrubi::Mixin::Dynamic::dynamic_apply_edits(accessorEdits, snippetBaseAccessor, snippetAccessorWithContractText, packageAccessorWithContractNoIsValueSpec) 
 
+          packageAccessorEdit = {
+            'ACCESSOR_DEFAULT' => 'nil',
+          }
+          
           dynamicMethodTexts = {
 
             # accessors
             
-            package_accessor: packageAccessorText,
-            package_accessor_with_contract: packageAccessorWithContractText,
-            package_accessor_with_contract_no_is_value: packageAccessorWithContractNoIsValueText,
+            package_accessor: {edit: packageAccessorEdit, spec: packageAccessorText},
+            package_accessor_with_contract: {edit: packageAccessorEdit, spec: packageAccessorWithContractText},
+            package_accessor_with_contract_no_is_value: {edit: packageAccessorEdit, spec: packageAccessorWithContractNoIsValueText},
 
             method_accessor_is_value_collection_with_keys: {edit: valueisnilresultEdits, spec: Potrubi::Mixin::Dynamic::dynamic_apply_edits(accessorEdits, isvaluecollectionwithkeysMethodText)},
             method_accessor_is_value_typed_collection: {edit: valueisnilresultEdits, spec: Potrubi::Mixin::Dynamic::dynamic_apply_edits(accessorEdits, isvaluetypedcollectionMethodText)},
             method_accessor_is_value_typed_collection_with_keys: {edit: valueisnilresultEdits, spec: Potrubi::Mixin::Dynamic::dynamic_apply_edits(accessorEdits, isvaluetypedcollectionwithkeysMethodText)},
 
+            method_accessor_is_value_typed_hash: {edit: valueisnilresultEdits, spec: Potrubi::Mixin::Dynamic::dynamic_apply_edits(accessorEdits, isvaluetypedcollectionMethodText)},
+            method_accessor_is_value_typed_hash_with_keys: {edit: valueisnilresultEdits, spec: Potrubi::Mixin::Dynamic::dynamic_apply_edits(accessorEdits, isvaluetypedcollectionwithkeysMethodText)},
+            
+            method_accessor_is_value_typed_array: {edit: valueisnilresultEdits, spec: Potrubi::Mixin::Dynamic::dynamic_apply_edits(accessorEdits, isvaluetypedarrayMethodText, mustbeArrayWithProcText)},
+            
             # contracts
             
             package_mustbe: packageMustbeText,
@@ -224,6 +311,8 @@
             method_mustbe_is_value_typed_array: {edit: valueisnilresultEdits, spec: [isvaluetypedarrayMethodText, mustbeArrayWithProcText]},
             
             method_mustbe_is_value_typed_collection_with_keys: {edit: valueisnilresultEdits, spec: isvaluetypedcollectionwithkeysMethodText},
+
+            method_mustbe_is_value_contract_collection_with_nil_values: {proc: isvaluecontractcollectionwithnilvaluesProc},
             
             method_mustbe_hash_with_proc: mustbeHashWithProcText,
             method_mustbe_array_with_proc: mustbeArrayWithProcText,
@@ -250,5 +339,5 @@
           
 
 
+end
 __END__
-        

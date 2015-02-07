@@ -28,7 +28,7 @@ Gem::Specification.new do |s|
   s.authors     = ["Ian Rumford"]
   s.email       = ["ian@rumford.name"]
   s.homepage    = "https://github.com/ianrumford/potrubi"
-  s.summary     = %q{Potrubi: plumbing for Ruby}
+  s.summary     = %q{Potrubi: Plumbing for Ruby}
   s.description = %q{Potrubi: A collection of Ruby mixins for common needs}
 
   s.rubyforge_project = "potrubi"
@@ -44,3 +44,4 @@ Gem::Specification.new do |s|
   s.required_ruby_version = '>= 1.9.3'
 
 end
+

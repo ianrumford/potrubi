@@ -16,7 +16,6 @@ mixinContent = Module.new do
   include Potrubi::Mixin::Persistence
   
   # so common
-  
   def set_attributes_or_croak(attrArgsNom, &attrBlok)
     eye = :'s_attrs'
     mustbe_hash_or_croak(attrArgsNom, eye)
@@ -37,7 +36,6 @@ mixinContent = Module.new do
 
     self
   end
-
 
   # If has key value is external source e.g. yaml
   # read it and set_attributes with it
@@ -65,7 +63,6 @@ mixinContent = Module.new do
   end
   alias_method :set_attributes_from_configuration_files_or_croak, :set_attributes_from_configuration_sources_or_croak
   
-
   def set_attributes_using_specification_or_croak(attrSpec, attrData,  &attrBlok)
     eye = :'s_attrs_using_spec'
 
@@ -73,6 +70,9 @@ mixinContent = Module.new do
 
     mustbe_hash_or_croak(attrSpec, eye, "attrSpec failed contract")
     mustbe_hash_or_croak(attrData, eye, "attrData failed contract")
+
+    attrSpec.each {|k,v| puts("#{eye} ATTR SPEC k >#{k}< v >#{v.class}< >#{v}<") }
+        attrData.each {|k,v| puts("\n\n\n#{eye} ATTR DATA k >#{k}< v >#{v.class}< >#{v}<") }
     
     attrData.each do | attrName, attrValue |
 
@@ -97,6 +97,34 @@ mixinContent = Module.new do
     $DEBUG && logger_mx(eye, logger_fmt_kls(attrSpec: attrSpec, attrBlok: attrBlok), logger_fmt_kls(attrData: attrData))    
 
     self
+    
+  end
+
+  def resolve_ruby_exe_path_or_croak(rubyArgs)
+    eye = :rsv_ruby_exe_path
+    
+    mustbe_hash_or_croak(rubyArgs, eye)
+
+    rubyVersion = rubyArgs[:ruby] || :ruby # default is MRI
+
+    rubyPath = case rubyVersion
+               when String then rubyVersion
+               when Symbol
+                 case rubyVersion
+                 when :ruby then '/usr/bin/ruby'
+                 when :jruby then '/usr/bin/jruby'
+                 else
+                   surprise_exception(rubyVersion, eye, "rubyVersion is what?")
+                 end
+               else
+                 surprise_exception(rubyVersion, eye, "rubyVersion is what?")
+               end
+    
+    mustbe_file_or_croak(rubyPath, eye, "ruby path does not exist")
+
+    $DEBUG && logger_ca(eye, logger_fmt_kls(rubyPath: rubyPath, rubyVersion: rubyVersion))
+
+    rubyPath
     
   end
   

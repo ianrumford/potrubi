@@ -13,11 +13,44 @@ require 'yaml'
 mixinContent = Module.new do
 
   include Potrubi::Mixin::Filesys
+
+  def write_ruby_script_or_croak(rubyArgs)
+    eye = :w_ruby
+    mustbe_hash_or_croak(rubyArgs, eye)
+
+    mustbe_subset_or_croak(rubyArgs.keys, [:ruby, :path, :permissions, :text], eye, "unexpected keys")
+
+    scriptPath = mustbe_string_key_or_croak(rubyArgs, :path, eye)
+    scriptPermissions = mustbe_fixnum_key_or_nil_or_croak(rubyArgs, :permissions, eye)
+    
+    rubyTextNom = mustbe_not_nil_or_croak(rubyArgs[:text], eye)
+
+    # may not want the header line
+    
+    rubyPath =  rubyArgs.has_key?(:ruby) ? resolve_ruby_exe_path_or_croak(rubyArgs) : nil
+    
+    rubyTextNrm = [rubyPath && "#!#{rubyPath}\n", rubyTextNom].flatten.compact.join
+
+    File.open(scriptPath, 'w', scriptPermissions) {|f| f.puts(rubyTextNrm) }
+
+    self
+    
+  end
   
-  def write_yaml_file_or_croak(yamlPath, yamlData)
+    
+  def write_yaml_file_or_croak(yamlPath, yamlData, yamlOpts=nil)
     eye = :w_yaml
+    
+    yamlPermissions = nil
+    yamlOpts && begin
+                  mustbe_hash_or_croak(yamlOpts, eye)
+                  mustbe_subset_or_croak(yamlOpts.keys, [:permissions], eye)
+                  yamlPermissions = yamlOpts[:permissions]
+                end
+
+    yamlPermissions = yamlOpts[:permissions]
     File.directory?(yamlPath) || create_path_directory_or_croak(yamlPath)
-    File.open(yamlPath, 'w') {|yamlHndl|  YAML.dump(yamlData, yamlHndl) }
+    File.open(yamlPath, 'w', yamlPermissions) {|yamlHndl|  YAML.dump(yamlData, yamlHndl) }
     self
   end
 
@@ -49,8 +82,6 @@ mixinContent = Module.new do
                  missing_exception(rubyPath, eye, 'rubyPath not found / not a file')
                end
 
-    ###puts("RUBY TETX >#{rubyText.class}< >#{rubyText}<")
-
     rubyData = instance_eval(rubyText)
     
     r = Kernel.block_given? ? rubyBlok.call(rubyData) : rubyData
@@ -61,10 +92,49 @@ mixinContent = Module.new do
   end
   
   # generalises configuration sources
+  # #################################
+  
+  # Recirsives resolves the config sources
+  # Takes hash:  source name and value pairs
+  # If value is a config source, and returns a hash, recursivesly resolves any config source values in it
+  # If value is a array, maps any configur sources
+  
+  def read_recursive_configuration_sources_or_croak(srceArgs, &srceBlok)
+    eye = :r_rcv_cfg_srces
 
+    $DEBUG && logger_me(eye, logger_fmt_kls(srceArgs: srceArgs), logger_fmt_kls(srceBlok: srceBlok))
+
+    srceData = potrubi_util_map_hash_v(srceArgs) do | srceName, srceValue |
+
+      r = read_configuration_source_or_croak(srceValue, &srceBlok)
+
+      case r
+      when Hash then read_recursive_configuration_sources_or_croak(r, &srceBlok)
+      when Array then read_recursive_configuration_sources_list_or_croak(*r, &srceBlok)
+      else
+        r
+      end
+      
+      ###r.is_a?(Hash) ? read_recursive_configuration_sources_or_croak(r, &srceBlok) : r
+      
+    end
+    
+    $DEBUG && logger_mx(eye, logger_fmt_kls(srceData: srceData))
+    
+    mustbe_hash_or_croak(srceData, eye, "srceData not hash")
+    
+  end
+
+  # Tolerate non-sources
+
+  def read_recursive_maybe_configuration_sources_or_croak(srceArgs)
+    read_recursive_configuration_sources_or_croak(srceArgs) {|v| v}
+  end
+  
   # Read configuration sources
-  # Take hard line and raise exception if not a source
-  # Unless blok is given and retruns reuslt of block
+  # Takes hash: source name and value pairs
+  # Take hard line and raise exception if value not a source
+  # Unless block is given and returns result of block
   
   def read_configuration_sources_or_croak(srceArgs, &srceBlok)
     eye = :r_cfg_srces
@@ -116,6 +186,8 @@ mixinContent = Module.new do
     srceData
   end
 
+  # same semantics as for hash sources
+  
   def read_maybe_configuration_sources_list_or_croak(*srceArgs)
     read_configuration_sources_list_or_croak(*srceArgs) {|v| v}
   end
@@ -134,6 +206,40 @@ mixinContent = Module.new do
     mustbe_array_or_croak(srceData, eye, "srceData not array")
 
   end
+
+  def read_recursive_configuration_sources_list_or_croak(*srceArgs, &srceBlok)
+    eye = 'r_rcv_cfg_srcs_lst'
+
+    # srceBlok is used on hash merges for duplicate keys
+    
+    $DEBUG && logger_me(eye, logger_fmt_kls(srceArgs: srceArgs, srceBlok: srceBlok))
+
+    srceData = srceArgs.map do | srceArg |
+
+      r = read_configuration_source_or_croak(srceArg, &srceBlok)
+
+      case r
+      when Hash then read_recursive_configuration_sources_or_croak(r, &srceBlok)
+      when Array then read_recursive_configuration_sources_list_or_croak(*r, &srceBlok)
+      else
+        r
+      end
+
+    end
+
+    $DEBUG && logger_mx(eye, logger_fmt_kls(srceData: srceData, srceBlok: srceBlok))
+
+    mustbe_array_or_croak(srceData, eye, "srceData not array")
+
+  end
+
+  def read_recursive_maybe_configuration_sources_list_or_croak(*srceArgs)
+    read_recursive_configuration_sources_list_or_croak(*srceArgs) {|v| v}
+  end
+
+    
+  # is_value predicates
+  # ##################
   
   def is_value_configuration_source?(srceArgs)
     eye = :'is_val_cfg_src?'
@@ -178,15 +284,14 @@ mixinContent = Module.new do
                     nil
                   end
 
-    r = Kernel.block_given? ? rubyBlok.call(rubyPathNrm) : rubyPathNrm
+    rubyPathMap = Kernel.block_given? ? rubyBlok.call(rubyPathNrm) : rubyPathNrm
     
-    $DEBUG && logger_ca(eye, logger_fmt_kls(rubyPath: rubyPathNrm, rubyPathNom: r))
+    $DEBUG && logger_ca(eye, logger_fmt_kls(rubyPathMap: rubyPathMap, rubyPathNrm: rubyPathNrm, rubyPathNom: rubyPathNom))
     
-    r
+    rubyPathMap
   end
 end
 
 mixinConstant = Potrubi::Core.assign_mixin_constant_or_croak(mixinContent, :Potrubi, :Mixin, :Persistence)
 
 __END__
-

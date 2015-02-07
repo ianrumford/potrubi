@@ -1,14 +1,14 @@
 
-require_relative '../core'
+require_relative '../bootstrap'
 
 mixinContent = Module.new do
   
   attr_accessor :name, :type, :parent
 
   def initialize(initArgs=nil, &initBlok)
-    eye = :i_std
+    eye = :i
     
-    initArgs && mustbe_hash_or_croak(initArgs, eye).each {|k, v| __send__("#{k}=", v) }
+    initArgs && potrubi_bootstrap_mustbe_hash_or_croak(initArgs, eye).each {|k, v| __send__("#{k}=", v) }
     
     Kernel.block_given? && instance_eval(&initBlok)
 
@@ -16,8 +16,13 @@ mixinContent = Module.new do
   
 end
 
-Potrubi::Core.assign_module_constant_or_croak(mixinContent, :Potrubi, :Mixin, :Initialize)
-#Potrubi::Core.assign_module_constant_or_croak(mixinContent, __FILE__)
+module Potrubi
+  module Mixin
+    module Initialize
+    end
+  end
+end
+
+Potrubi::Mixin::Initialize.__send__(:include, mixinContent)  # Instance Methods
 
 __END__
-

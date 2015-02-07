@@ -20,11 +20,8 @@ mixinContent = Module.new do
   Object.class_eval(errorText)
 
   def raise_exception(exceptionTypeNom, *tellTales)
-    #puts "RAISE EXCEPTION CALLED"
     exceptionTypeNrm = exceptionTypeNom.is_a?(Exception) ? exceptionTypeNom : RuntimeError  # was an exxception type given? Default to Rumtime
     tellTale = (exceptionTypeNrm == exceptionTypeNom) ? logger_format_telltales(*tellTales) : logger_format_telltales(exceptionTypeNom, *tellTales)
-    #error_message('RAISE EXCEPTION:', exceptionTypeNrm.class.name.upcase, *tellTales)
-    #puts caller
     raise(exceptionTypeNrm,tellTale,caller)
   end
   
@@ -33,30 +30,15 @@ mixinContent = Module.new do
   end
 
   exceptionMethods = {
-    #:deprecated_method => nil,
-    #:wrong_class => nil,
     :unsupported => nil,
     :surprise => nil,
     :duplicate => nil,
     :missing => nil,
     :contract => nil,
-    #:too_small => nil,
-    #:unequal => nil,
-    #:value => nil,
-    #:instantiation => nil,
-    #:unknown_attribute => nil,
-    #:nil => nil,
     :nomethod => nil,
-    #:method => nil,
-    #:file_not_found => nil,
-    #:file_not_writeable => nil,
-    #:runtime => nil,
-    #:require => nil,
-    #:chain => nil,
     :size => nil,
     :empty => nil,
     :connection => nil,
-    #:argument => nil,
   }
 
   Potrubi::Mixin::Dynamic::dynamic_define_methods(self, exceptionMethods) do | exceptionMethod, exceptionType |
@@ -66,7 +48,6 @@ mixinContent = Module.new do
       METHOD_NAME: "#{exceptionMethod}_exception",
       EXCEPTION_NAME: "#{exceptionMethod}",
       EXCEPTION_TYPE: excType.to_s.split('_').map{|a| a.capitalize }.join.sub(/\Z/,'Error'),
-      ###EYENAME: ":'exc_#{exceptionMethod}'",
     }
 
     textException = <<-'ENDOFHERE'
@@ -74,10 +55,10 @@ mixinContent = Module.new do
              raise_exception(EXCEPTION_TYPE, *args, "value >#{value.class}< >#{value}<")
            end;                            
            ENDOFHERE
+
+           {edit: edits, spec: textException}
            
-    {edit: edits, spec: textException}
-           
-   end
+         end
          
 end
 
